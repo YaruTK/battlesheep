@@ -27,7 +27,7 @@ class Field:
 
     def show(self):
         header = [i for i in range(self.width + 1)]
-        print(' '.join(str(element) for element in header))
+        print(' ' + ' '.join(str(element) for element in header))
         print('-'*(2*self.width + 2))
         for row in range(self.height):
             print(letters[row]+'| '+' '.join(str(element) for element in self.matrix[row]))
@@ -35,8 +35,8 @@ class Field:
 
 class Sheep:
     def __init__(self, head, tail):
-        self.topleft = (min(head[0], tail[0]), min(head[1], tail[1]))
-        self.bottomright = (max(head[0], tail[0]), max(head[1], tail[1]))
+        self.topleft = (min(head[0]-1, tail[0]-1), min(head[1]-1, tail[1]-1))
+        self.bottomright = (max(head[0]-1, tail[0]-1), max(head[1]-1, tail[1]-1))
         self.spawnbox = (
             (max(self.topleft[0]-1, 0), max(self.topleft[1]-1, 0)),
             (min(self.bottomright[0]+1, config.width), min(self.bottomright[1]+1, config.height)
