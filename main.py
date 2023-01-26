@@ -5,7 +5,7 @@
 import config
 
 
-list_of_sheep = {1: [], 2: [], 3: [], 4: []}
+dictionary_of_ships = {1: [], 2: [], 3: [], 4: []}
 letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 letters_lowercase = "abcdefghijklmnopqrstuvwxyz"
 separators = " .-=+/?!@#$%^&*()_\\"
@@ -53,26 +53,25 @@ class Sheep:
         self.bottomright = (max(head[0]-1, tail[0]-1), max(head[1]-1, tail[1]-1))
         self.spawnbox = (
             (max(self.topleft[0]-1, 0), max(self.topleft[1]-1, 0)),
-            (min(self.bottomright[0]+1, config.width), min(self.bottomright[1]+1, config.height)
+            (min(self.bottomright[0]+1, config.width-1), min(self.bottomright[1]+1, config.height-1)
              )
                               )
-        if self.topleft[1] == self.bottomright[1]:
-            self.horizontal = True
-            self.length = abs(self.topleft[0] - self.bottomright[0]) + 1
-        else:
-            self.horizontal = False
+        if self.topleft[0] == self.bottomright[0]:  # if horizontal (or singular)
             self.length = abs(self.topleft[1] - self.bottomright[1]) + 1
+            self.tiles = [(self.topleft[0], y) for y in range(self.topleft[1], self.topleft[1] + self.length)]
+        else:  # otherwise
+            self.length = abs(self.topleft[0] - self.bottomright[0]) + 1
+            self.tiles = [(x, self.topleft[1]) for x in range(self.topleft[0], self.topleft[0] + self.length)]
         self.temporal_shipmap = create_empty_map()
         if check_existence_possibility(self) and check_intersection(self):
-            for x in range(self.spawnbox[0][0], self.spawnbox[1][0]):
-                for y in range(self.spawnbox[1][0], self.spawnbox[1][1]):
+            for x in range(self.spawnbox[0][0], self.spawnbox[1][0] + 1):
+                for y in range(self.spawnbox[0][1], self.spawnbox[1][1] + 1):
+                    print(self.spawnbox)
+                    print(x, y)
                     intersections[x][y] = 1
-            if self.horizontal:
-                for x in range(self.topleft[0], self.topleft[0] + self.length):
-                    self.temporal_shipmap[x][self.topleft[1]] = 2
-            else:
-                for y in range(self.topleft[1], self.topleft[1] + self.length):
-                    self.temporal_shipmap[self.topleft[0]][y] = 2
+            for item in self.tiles:
+                x, y = item
+                self.temporal_shipmap[x][y] = 2
             add_ship(self)
 
     def place(self, field_class):
@@ -82,31 +81,33 @@ class Sheep:
 
 
 def check_existence_possibility(newship: Sheep):
-    if len(list_of_sheep[newship.length]) < config.existence_of_the_ships[newship.length]:
+    if len(dictionary_of_ships[newship.length]) < config.existence_of_the_ships[newship.length]:
         return True
     else:
+        print("Error: max number of sheep of selected size reached")
         return False
 
 
 def check_intersection(newship: Sheep):
-    for x in range(newship.spawnbox[0][0], newship.spawnbox[1][0]):
-        for y in range(newship.spawnbox[1][0], newship.spawnbox[1][1]):
-            if intersections[x][y] == 1:
-                return False
-            else:
-                return True
+    for item in newship.tiles:
+        x, y = item
+        if intersections[x][y] == 1:
+            print("Error: cannot place sheep here")
+            return False
+        return True
 
 
 def check_size(newship: Sheep):
     if (newship.topleft[0]-newship.bottomright[0]) * (newship.topleft[1]-newship.bottomright[1]) == 0:
         return True
     else:
+        print("Error: cannot add the sheep of selected size")
         return False
 
 
 def add_ship(ship):
     if check_size(ship):
-        list_of_sheep[ship.length].append(ship)
+        dictionary_of_ships[ship.length].append(ship)
         ship.place(field)
     else:
         print("Wrong shape of the sheep")
@@ -125,16 +126,16 @@ def translate(str):
     x1 = max(letters.find(ending[0]), letters_lowercase.find(ending[0]))+1
     y0 = int(beginning[1:])
     y1 = int(ending[1:])
-    # print(
-    #     str(x0) + ' \n' +
-    #     str(x1) + ' \n' +
-    #     str(y0) + ' \n' +
-    #     str(y1)
-    # )
     head, tail = (x0, y0), (x1, y1)
-    print(head)
-    print(tail)
-    return (head, tail)
+    return head, tail
+
+
+def announce_ships():
+    message = "Singular sheep: " + str(len(dictionary_of_ships[1])) + '/' + str(config.existence_of_the_ships[1]) + \
+        '\n' + "Double sheep: " + str(len(dictionary_of_ships[2])) + '/' + str(config.existence_of_the_ships[2]) +\
+        '\n' + "Triple sheep: " + str(len(dictionary_of_ships[3])) + '/' + str(config.existence_of_the_ships[3]) +\
+        '\n' + "Quadruple sheep:" + str(len(dictionary_of_ships[4])) + '/' + str(config.existence_of_the_ships[4])
+    return message
 
 
 if __name__ == '__main__':
@@ -142,10 +143,12 @@ if __name__ == '__main__':
     #ship1 = Sheep((2, 2), (2, 3))
     #ship2 = Sheep((6, 6), (6, 9))
     field.show()
-    while count_ships(list_of_sheep) < sum(config.existence_of_the_ships.values()):
+    while count_ships(dictionary_of_ships) < sum(config.existence_of_the_ships.values()):
+        print(announce_ships())
         temp = input("Choose coordinates of the battlesheep (format \'A6 C6\')")
         headx, tailx = translate(temp)
         shipx = Sheep(headx, tailx)
-        print(list_of_sheep)
+        print(dictionary_of_ships)
+        print(intersections)
         field.show()
     field.show()
