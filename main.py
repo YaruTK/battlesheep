@@ -3,11 +3,20 @@
 # method to print field out
 # class for ships
 import config
-import numpy as np
 
 
 list_of_sheep = {1: [], 2: [], 3: [], 4: []}
 letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+letters_lowercase = "abcdefghijklmnopqrstuvwxyz"
+separators = " .-=+/?!@#$%^&*()_\\"
+roman = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX','X']
+
+
+def count_ships(dict):
+    number = 0
+    for value in dict.values():
+        number += len(value)
+    return number
 
 
 def create_empty_map():
@@ -30,7 +39,12 @@ class Field:
         print(' ' + ' '.join(str(element) for element in header))
         print('-'*(2*self.width + 2))
         for row in range(self.height):
-            print(letters[row]+'| '+' '.join(str(element) for element in self.matrix[row]))
+            if config.form == "letters":
+                print(letters[row]+'| '+' '.join(str(element) for element in self.matrix[row]))
+            elif config.form == "roman":
+                print('X'*((row+1)//10)+roman[(row+1)%10]+'| '+' '.join(str(element) for element in self.matrix[row]))
+            elif config.form == "digit":
+                print(str(row+1) + '| ' + ' '.join(str(element) for element in self.matrix[row]))
 
 
 class Sheep:
@@ -67,7 +81,7 @@ class Sheep:
                 field_class.matrix[row][col] += self.temporal_shipmap[row][col]
 
 
-def check_existence_possibility(newship:Sheep):
+def check_existence_possibility(newship: Sheep):
     if len(list_of_sheep[newship.length]) < config.existence_of_the_ships[newship.length]:
         return True
     else:
@@ -98,9 +112,40 @@ def add_ship(ship):
         print("Wrong shape of the sheep")
 
 
+def translate(str):
+    for symbol in separators:
+        index = str.find(symbol)
+        if index != -1:
+            break
+    beginning = str[:index]
+    ending = str[index+1:]
+    print(beginning)
+    print(ending)
+    x0 = max(letters.find(beginning[0]), letters_lowercase.find(beginning[0]))+1
+    x1 = max(letters.find(ending[0]), letters_lowercase.find(ending[0]))+1
+    y0 = int(beginning[1:])
+    y1 = int(ending[1:])
+    # print(
+    #     str(x0) + ' \n' +
+    #     str(x1) + ' \n' +
+    #     str(y0) + ' \n' +
+    #     str(y1)
+    # )
+    head, tail = (x0, y0), (x1, y1)
+    print(head)
+    print(tail)
+    return (head, tail)
+
+
 if __name__ == '__main__':
     field = Field()
-    ship1 = Sheep((2, 2), (2, 3))
-    ship2 = Sheep((6, 6), (6, 9))
-
+    #ship1 = Sheep((2, 2), (2, 3))
+    #ship2 = Sheep((6, 6), (6, 9))
+    field.show()
+    while count_ships(list_of_sheep) < sum(config.existence_of_the_ships.values()):
+        temp = input("Choose coordinates of the battlesheep (format \'A6 C6\')")
+        headx, tailx = translate(temp)
+        shipx = Sheep(headx, tailx)
+        print(list_of_sheep)
+        field.show()
     field.show()
